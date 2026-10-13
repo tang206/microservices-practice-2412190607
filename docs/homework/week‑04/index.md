@@ -28,26 +28,29 @@
 ## 4. 阶段三：数据库持久化
 > 
 
-## 2. 单体应用实现
-### 2.1 实现思路
-基于Spring Boot单体工程，包名`com.zjgsu.tfy`。
-包含两个业务模型Pet、Visit；VisitService处理业务逻辑，VisitController处理HTTP请求。
-一共4个REST接口，全部以`/api/`开头；业务规则在Service层校验，Controller只处理请求与响应，不直接操作数据。
-采用内存HashMap仓储，应用重启数据丢失。
+# 单体应用实现
+## 实现思路
+基于Spring Boot搭建宠物医院单体应用。
+包含两个业务模型Pet宠物、Visit就诊记录。
+分层结构：Model、Repository内存存储、Service业务层、Controller接口层。
+Controller仅负责HTTP请求响应，数据访问逻辑放在Repository。
+业务规则：新增就诊记录时，对应的petId必须在系统中存在，不能为不存在的宠物添加就诊记录。
 
-### 2.2 接口清单
-1. POST `/api/pets`  创建宠物
-2. GET `/api/pets/{id}` 查询单条宠物信息
-3. POST `/api/visits` 创建就诊记录（业务校验：petId必须存在）
-4. GET `/api/visits/pet/{petId}` 查询该宠物所有就诊记录
-
-### 2.3 运行命令
-启动项目：
-./mvnw spring-boot:run
-### 2.4 Curl 测试示例
-新增宠物
-curl -X POST -H "Content-Type:application/json" -d '{"name":"豆豆","birthDate":"2023-05-10","petType":"Dog"}' http://localhost:8080/api/pets
-新增就诊记录
-curl -X POST -H "Content-Type:application/json" -d '{"petId":1,"visitTime":"2026-10-12 14:00:00","description":"感冒检查"}' http://localhost:8080/api/visits
-### 2.5 验证结果
-执行 curl 调用接口，正常场景返回对应资源，非法 petId 创建就诊记录返回异常信息。
+## 运行命令
+mvn spring-boot:run
+## 接口测试 curl 命令
+### 创建宠物
+curl -X POST -H "Content-Type:application/json" -d '{"name":"旺财","birthDate":"2023-05-01","petType":"dog"}' http://localhost:8080/api/pets
+### 根据 id 查询单只宠物
+curl http://localhost:8080/api/pets/1
+### 创建就诊记录
+curl -X POST -H "Content-Type:application/json" -d '{"petId":1,"description":"疫苗接种","visitDate":"2026-10-13"}' http://localhost:8080/api/visits
+### 查询指定宠物的就诊记录
+curl http://localhost:8080/api/visits/pet/1
+### 业务规则验证
+curl -X POST -H "Content-Type:application/json" -d '{"petId":999,"description":"体检","visitDate":"2026-10-13"}' http://localhost:8080/api/visits
+## 运行结果
+1.创建宠物接口返回带自增 id 的宠物 JSON 对象。
+2.根据 id 查询宠物接口返回对应宠物信息。
+3.创建就诊记录成功时返回就诊记录；宠物不存在则返回业务异常提示。
+4.查询宠物就诊记录返回该宠物所有就诊记录数组。
