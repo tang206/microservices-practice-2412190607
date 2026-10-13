@@ -100,3 +100,19 @@ curl -X POST -H "Content-Type:application/json" -d '{"petId":999,"description":"
 2.根据 id 查询宠物接口返回对应宠物信息。
 3.创建就诊记录成功时返回就诊记录；宠物不存在则返回业务异常提示。
 4.查询宠物就诊记录返回该宠物所有就诊记录数组。
+
+## 4. 测试与验证
+### 实现思路
+分三层完成测试：Repository层验证数据库读写；Service层验证业务规则，重点校验新增就诊记录时宠物不存在抛出异常；API层验证正常请求与错误请求响应。使用H2内存数据库用于自动化测试，执行测试命令自动加载测试数据，测试可重复执行。
+
+### 运行命令
+进入monolith目录执行：
+```bash
+./mvnw test
+```
+### 测试用例
+Repository 测试：测试 Pet、Visit 的保存与查询，验证数据库读写正常。
+Service 业务测试：成功新增就诊记录；使用不存在 petId 新增就诊，捕获 ResourceNotFoundException。
+API 接口测试：调用 POST、GET 接口验证正常返回；传入无效 petId，接口返回对应错误响应。
+### 验证结果
+执行./mvnw test，所有测试用例全部通过。Repository 可正常读写数据，Service 业务校验生效，API 能够正确返回成功结果与异常响应，每次运行自动准备测试数据，测试可重复执行。
