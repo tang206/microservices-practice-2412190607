@@ -48,22 +48,53 @@ GET /api/visits/pet/{petId}：根据宠物 ID 查询该宠物所有就诊记录
 ```bash
 #创建宠物
 curl -X POST -H "Content-Type:application/json" -d '{"name":"旺财","petType":"DOG","birthDate":"2024-01-01"}' http://localhost:8080/api/pets
-```
-查询全部宠物
+#查询全部宠物
 curl http://localhost:8080/api/pets
-根据id查询宠物
+#根据id查询宠物
 curl http://localhost:8080/api/pets/1
-创建就诊记录
+#创建就诊记录
 curl -X POST -H "Content-Type:application/json" -d '{"petId":1,"description":"犬瘟筛查","visitDate":"2026-10-10"}' http://localhost:8080/api/visits
-查询全部就诊记录
+#查询全部就诊记录
 curl http://localhost:8080/api/visits
-根据宠物id查询就诊记录
+#根据宠物id查询就诊记录
 curl http://localhost:8080/api/visits/pet/1
-验证结果
+```
+### 验证结果
 启动 SpringBoot 项目，执行 curl 命令调用接口，可正常完成新增与查询；传入不存在 petId 新增就诊记录，服务抛出 ResourceNotFoundException，接口返回异常
 
 ## 4. 阶段三：数据库持久化
-> 
+### 实现思路
+替换内存仓储，接入 MySQL，使用 Spring Data JPA 实现持久化。Pet、Visit 实体增加 JPA 持久化注解，Repository 继承 JpaRepository。使用 data.sql 预置测试数据，DTO 继续承载 API 请求，保留原有 Service 业务校验逻辑。设计 pet 与 visit 一对多关系，visit 通过 pet_id 外键关联 pet。
+### 配置信息
+application.yml
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/pet_hospital?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+  sql:
+    init:
+      mode: always
+```
+本地 MySQL 执行建库语句
+```sql
+CREATE DATABASE pet_hospital DEFAULT CHARACTER SET utf8mb4;
+```
+### 运行步骤
+本地启动 MySQL，执行 SQL 创建 pet_hospital 数据库
+修改 application.yml 的数据库账号密码
+启动项目，自动执行 data.sql 加载预置测试数据
+```bash
+mvn spring-boot:run
+```
+使用 curl 调用接口读写数据，数据持久存入 MySQL
+### 验证结果
+调用接口新增数据后，在 MySQL 客户端执行select * from pet;、select * from visit;，可查询到写入数据。新增就诊记录时，传入不存在 petId 会抛出 ResourceNotFoundException，业务校验生效。
 
 # 单体应用实现
 ## 实现思路
