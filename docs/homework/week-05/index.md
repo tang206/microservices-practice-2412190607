@@ -116,10 +116,11 @@ curl http://localhost:8080/api/visits/pet/1
 结果：成功读取刚才创建的就诊数据，验证 MySQL 数据持久化、容器接口调用正常。
 
 ## 第四部分 数据持久化验证
-### 验证目标
+
+### 1.验证目标
 验证MySQL挂载命名数据卷，容器销毁重建之后业务数据不会丢失，本次不使用docker compose down -v，防止删除持久化数据卷。
 
-### 验证流程
+### 2.验证流程
 1. 前置操作：调用接口创建宠物档案和就诊记录，执行查询并记录返回结果。
 ```bash
 curl http://localhost:8080/api/visits/pet/1
@@ -136,5 +137,6 @@ docker compose up -d
 ```bash
 curl http://localhost:8080/api/visits/pet/1
 ```
+
 2. 验证结论
 重建容器之后查询结果和重建前完全一致，记录 ID、就诊信息没有变化。MySQL 数据保存在宿主机的命名数据卷中，容器删除不会删除卷内数据，完成持久化验证。
