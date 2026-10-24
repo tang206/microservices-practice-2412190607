@@ -127,3 +127,46 @@ flowchart LR
 
 ### 当前尚未实现的业务能力
 预约管理、宠物档案、病历处方、药品库存、收费账单、门诊数据统计等业务模块暂未开发，仅完成基础 Web 与健康检查接口。
+
+
+## Docker 容器化部署与 Compose 编排
+### 1. 部署说明
+使用 Docker 多阶段构建打包 SpringBoot 应用镜像，通过 docker-compose 编排应用服务与 MySQL 数据库，实现一键启动整套环境，数据持久化到 MySQL 容器。
+文件说明
+Dockerfile：应用镜像构建脚本
+compose.yaml：服务编排配置，包含 pet-hospital 应用、mysql 数据库
+.dockerignore：构建忽略文件
+### 2. 构建与启停命令
+```bash
+# 构建镜像并启动服务
+docker compose up -d --build
+# 查看日志
+docker compose logs -f
+# 停止服务
+docker compose down
+```
+
+### 3. 业务接口验证流程
+项目未引入 Actuator 健康检查组件，使用GET /api/pets作为连通验证接口，验证服务是否正常运行。
+测试顺序：连通校验 → 创建宠物 → 创建就诊记录 → 查询就诊记录。
+```bash
+# 连通验证
+curl http://localhost:8080/api/pets
+
+# 创建宠物档案
+curl -X POST -H "Content-Type: application/json" -d '{
+  "name":"旺财",
+  "birthDate":"2024-05-01"
+}' http://localhost:8080/api/pets
+
+# 创建就诊记录
+curl -X POST -H "Content-Type: application/json" -d '{
+  "petId":1,
+  "visitDate":"2026-10-24",
+  "description":"感冒就诊"
+}' http://localhost:8080/api/visits
+
+# 查询该宠物全部就诊记录
+curl http://localhost:8080/api/visits/pet/1
+```
+验证结果：接口调用成功，数据存入 MySQL，重启容器后数据不丢失，持久化生效。
